@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 상세보기</title>
+    <th:block th:replace="/layout/head :: head"/>
+</head>
+<body>
+<!-- Header Section Start -->
+<th:block th:replace="/layout/header :: header"/>
+<!-- Header Section End -->
+<!-- ======= Breadcrumbs ======= -->
+<section id="breadcrumbs" class="breadcrumbs">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>커뮤니티</h2>
+            <ol>
+                <li><a th:href="@{/}">Home</a></li>
+                <li><a th:href="@{/board/list.do}">커뮤니티</a></li>
+            </ol>
+        </div>
+    </div>
+</section>
+<!-- End Breadcrumbs -->
+<!-- Board Section Start -->
+<section class="blog">
+    <!-- Category Strart -->
+    <div class="col-lg-4">
+        <div class="sidebar">
+            <h3 class="sidebar-title">카테고리</h3>
+            <div class="sidebar-item categories">
+                <ul>
+                    <li>
+                        <a th:href="@{/board/list.do}" th:style="${empty curCategory} ? 'background-color:#f03c028a;' : ''">전체</a>
+                    </li>
+                    <th:block th:each="cate : ${categories}">
+                        <li>
+                            <a th:href="${'board/list.do?cate='+cate.cate}"
+                            th:style="${curCategory.equals(cate.cate)} ? 'background-color : #f03c028a;' : ''"
+                            th:text="${cate.cateName}"></a>
+                        </li>
+                    </th:block>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!-- Category End -->
+    <!-- BoardList Section Start -->
+    <div class="col-lg-8">
+        <!-- Search Start -->
+        <div class="sidebar-item search-form">
+            <form th:action="@{/board/list.do}" method="get">
+                <select id="type" name="type" class="select" style="height:unset;">
+                    <option value="T" th:selected="${type eq 'title'}">제목</option>
+                    <option value="C" th:selected="${type eq 'content'}">내용</option>
+                    <option value="W" th:selected="${type eq 'author'}">작성자</option>
+                </select>
+                <input type="text" id="keyword" name="keyword" placeholder="검색">
+                <button type="submit"><i class="bi bi-search"></i></button>
+            </form>
+        </div>
+        <!-- Search End -->
+        <div class="card w-100">
+            <div class="card-body">
+                <div class="table-responsive project-list">
+                    <div class="cta-pricinga">
+                        <a th:href="@{/board/inser.do}" class="btn cta-btn" th:value="글쓰기"></a>
+                    </div>
+                    <table class="table project-table table-centered table-nowrap">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="text-center" style="width: 5%">#</th>
+                            <th scope="col" class="text-center" style="width: 15%">카테고리</th>
+                            <th scope="col" class="text-center">제목</th>
+                            <th scope="col" class="text-center" style="width: 20%">작성일</th>
+                            <th scope="col" class="text-center" style="width: 10%">작성자</th>
+                            <th scope="col" class="text-center" style="width: 10%">조회수</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-hover" th:each="list : ${boardList}">
+                                <th class="text-center" th:text="${list.seq}"></th>
+                                <th class="text-center" th:text="${list.cateName}"></th>
+                                <th class="text-center"><a th:href="${'board/list.do?seq='+list.seq+'&pate='+curPage}" th:text="${list.title}"></a></th>
+                                <th class="text-center">
+                                    <span th:with="resdate=${#dates.format(list.regdate, 'yyyy-MM-dd HH:mm:ss')}">
+                                        <span th:text="${#dates.format(resdate, 'yyyy-MM-dd')}"></span>
+                                    </span>
+                                </th>
+                                <th class="text-center" th:text="${list.author}"></th>
+                                <th class="text-center" th:text="${list.visited}"></th>
+                            </tr>
+                            <tr th:if="${boardList.isEmpty()}">
+                                <td colspan="6" class="text-center"> 등록된 게시글이 없습니다.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- 페이지 시작 -->
+                    <!-- pagnation -->
+                    <div class="blog-pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li th:if="${curPage > 5}" class="page-item">
+                                <a th:href="${'/board/list?page='+page.blockStartNum - 1 + ${#strings.isEmpty(categories) ? '' : '&cate=' + curCategory}+${#strings.isEmpty(page.keyword) ? '' : '&type=' + page.type + '&keyword=' + page.keyword}}" class="page-link"><i class="fa-solid fa-arrow-left"></i></a>
+                            </li>
+                            <th:each begin="${page.blockStartNum}" end="${page.blockLastNum}">
+                                <li th:class="${page.getCurPageNum() == curPage} ? 'page-item active' : 'page-item'">
+                                    <a th:href="${'/board/list?page=' + curPage + ${#strings.isEmpty(curCategory) ? '' : '&cate=' + curCategory} + ${#strings.isEmpty(page.keyword) ? '' : '&type=' + page.type + '&keyword=' + page.keyword}}" class="page-link" aria-label="Page ${i}" aria-current="page" th:text="${curPage}"></a>
+                                </li>
+                            </th:each>
+                            <li th:if="${page.blockLastNum < page.totalPageCount}" class="page-item">
+                                <a th:href="${'/board/list?page='+ ${page.blockLastNum + 1}+${#strings.isEmpty(categories) ? '' : '&cate=' + curCategory}+${#strings.isEmpty(page.keyword) ? '' : '&type=' + page.type + '&keyword=' + page.keyword}}" class="page-link"><i class="fa-solid fa-arrow-right"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- 페이지 끝 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- BoardList Section End -->
+</section>
+<!-- Board Section End -->
+<!-- Footer Area Start -->
+<th:block th:replace="/layout/footer :: footer"/>
+<!-- Footer Area End -->
+</body>
+</html>

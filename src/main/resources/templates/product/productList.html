@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 목록</title>
+    <th:block th:insert="~{layout/head :: head}"/>
+    <style>
+        .form-control { border: 1px solid #65534c; height: 50px;}
+        h2 {font-weight: bold}
+    </style>
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+</head>
+<body>
+<!-- Header Section Start -->
+<header th:insert="~{layout/header :: header}"></header>
+<!-- Header Section End -->
+<!-- ======= Breadcrumbs ======= -->
+<section id="breadcrumbs" class="breadcrumbs">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>상품 목록</h2>
+            <ol>
+                <li><a th:href="@{/}">Home</a></li>
+                <li>Product</li>
+            </ol>
+        </div>
+    </div>
+</section>
+<!-- End Breadcrumbs -->
+<!-- ProductList Section Start -->
+<section>
+    <input type="hidden" id="proaddrVal" th:value="${proaddr}">
+    <button id="proaddrBtn" onclick="proaddr()"> 내 지역만 보기 </button>
+    <button
+            onclick="status()"> 판매중인 상품 </button>
+    <div class="row mt-5 justify-content-center" >
+        <h2 class="text-center mb-5"> 판매 중인 상품 </h2>
+        <div class="col-lg-3">
+            <div class="">
+                <ul>
+                    <li th:style="${curCategory eq null ? 'border-bottom : 1px solid #333' : ''}">
+                        <a th:href="@{/product/list}" th:text="전체"></a>
+                    </li>
+                    <li th:each="cate : ${categories}">
+                        <button class="cateBtn" onclick="cate()" th:value="${cate.cate}" th:text="${cate.cateName}" th:style="${cate.cate eq curCategory ? 'background-color : pink' : ''}"></button>
+                    </li>
+                </ul>
+            </div>
+            <div class="justify-content-center">
+                <div class="btn-group">
+                    <a th:href="@{/product/insert}" class="btn btn-primary">상품 등록</a>
+                </div>
+                <form th:action="@{/product/list}" method="get">
+                    <select id="type" name="type" class="select" style="height:unset;">
+                        <option value="P" id="P">상품명</option>
+                        <option value="C" id="C">내용</option>
+                        <option value="S" id="S">판매자</option>
+                    </select>
+                    <input type="text" id="keyword" name="keyword" placeholder="검색" th:value="${keyword}">
+                    <button type="submit"><i class="bi bi-search"></i></button>
+                </form>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>카테고리</th>
+                        <th>지역</th>
+                        <th>상태</th>
+                        <th>상품명</th>
+                        <th>가격</th>
+                        <th>판매자</th>
+                        <th>등록일</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="list : ${productList}">
+                        <td th:text="${list.pno}"></td>
+                        <td th:text="${list.cateName}"></td>
+                        <td th:text="${list.proaddr}"></td>
+                        <td>
+                            <span th:if="${list.status eq 'SALE'}">판매 중</span>
+                            <span th:if="${list.status eq 'RESERVED'}">예약 중</span>
+                            <span th:if="${list.status eq 'OUT'}">판매 완료</span>
+                        </td>
+                        <td><a th:href="@{/product/detail(pno=${list.pno})}" th:text="${list.pname}"></a></td>
+                        <td th:text="${list.price}"></td>
+                        <td th:text="${list.seller}"></td>
+                        <td th:text="${list.createAt}"></td>
+                    </tr>
+                    <tr th:if="${productList.isEmpty()}">
+                        <td colspan="5"> 등록된 상품이 없습니다.</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!-- Pagination -->
+                <div class="row" th:if="${page.lastPageNum != 0}">
+                    <div class="col-lg-12">
+                        <ul class="pagination">
+                            <li th:if="${curPage > 1}">
+                                <span id="prevBtn" th:data-value="${curPage}"> << </span>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(page.blockStartNum, page.blockLastNum)}">
+                                <span th:data-value="${i}" th:if="${page.curPageNum == i}" th:text="${i}" class="is_active pageBtn"></span>
+                                <span class="pageBtn" th:data-value="${i}" th:if="${page.curPageNum != i}"  th:text="${i}"></span>
+                            </li>
+                            <li th:if="${page.blockLastNum < page.totalPageCount}">
+                                <span id="nextBtn" th:data-value="${curPage}"> >> </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    $(document).ready(function (){
+        // 내 주소만 보기 버튼
+        $("#proaddrBtn").click(function (){
+            // 로그인 한 유저의 addr3 정보
+            var proaddrVal = $("#proaddrVal").val();
+
+            // 로그인을 하지 않았으면 로그인 알림창 띄우기
+            // if (!proaddrVal) {
+            //     alert("로그인을 해주세요");
+            // } else {
+                // 현재 URL
+                var currentUrl = new URL(window.location.href);
+
+                // proaddr 파라미터 추가 또는 갱신
+                currentUrl.searchParams.set('proaddr', proaddrVal);
+
+                // 페이지 값을 항상 1로 설정
+                currentUrl.searchParams.set('page', '1');
+
+                window.location.href = currentUrl.href;
+            // }
+        });
+
+        $("#statusBtn").click(function () {
+            // 현재 URL
+            var currentUrl = window.location.href;
+            var newStatus = 'SALE';
+            var newPage = '1';
+
+            // URL에서 status 매개변수 확인
+            var hasStatusParameter = currentUrl.indexOf('status=') !== -1;
+
+            if (hasStatusParameter) {
+                // status 매개변수 값을 SALE로 변경
+                var updatedUrl = currentUrl.replace(/([&?]status=)[^&]+/, '$1' + newStatus);
+            } else {
+                // status 매개변수가 없으면 URL에서 해당 부분 삭제
+                var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                var newUrl = currentUrl + separator + 'status=' + newStatus;
+
+                // 기존 페이지 값이 있는지 확인 후 새 URL로 이동
+                if (currentUrl.indexOf('page=') !== -1) {
+                    window.location.href = newUrl.replace(/([&?]page=)[^&]+/, '$1' + newPage);
+                } else {
+                    window.location.href = newUrl + '&page=' + newPage;
+                }
+                return;
+            }
+
+            // 버튼 비활성화
+            $(this).prop('disabled', true);
+
+            // URL에서 page 매개변수 확인
+            if (updatedUrl.indexOf('page=') !== -1) {
+                // page 매개변수 값이 있으면 값을 1로 변경
+                updatedUrl = updatedUrl.replace(/([&?]page=)[^&]+/, '$1' + newPage);
+            } else {
+                // page 매개변수가 없으면 새로 추가
+                var separator = updatedUrl.indexOf('?') !== -1 ? '&' : '?';
+                updatedUrl += separator + 'page=' + newPage;
+            }
+
+            // 새 URL로 이동
+            window.location.href = updatedUrl;
+        });
+
+        // 카테고리
+        $(document).ready(function (){
+            $(".cateBtn").click(function (){
+                // 버튼의 cate 의 값
+                var newCateValue = $(this).val();
+
+                // 현재 Url
+                var currentUrl = window.location.href;
+
+                // Url에 cate의 값이 존재하는 지 확인
+                if (currentUrl.indexOf('?cate=') !== -1 || currentUrl.indexOf('&cate=') !== -1) {
+                    // cate의 값을 다른 값으로 변경
+                    var updatedUrl = currentUrl.replace(/([&?]cate=)[^&]+/, '$1' + newCateValue);
+                    window.location.href = updatedUrl;
+                } else {
+                    // cate의 값이 없으면 추가
+                    var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                    var newUrl = currentUrl + separator + 'cate=' + newCateValue;
+                    window.location.href = newUrl;
+                }
+            });
+        });
+        // 페이징
+        // prev Btn
+        $("#prevBtn").click(function (){
+            // 버튼의 페이지 값
+            var curPage = $(this).data("value"); // 페이지 값을 정수로 변환
+
+            // URL에서 페이지 값 변경
+            var currentUrl = window.location.href;
+            var updatedUrl = currentUrl.replace(/([&?]page=)[^&]+/, '$1' + (curPage -1));
+
+            // 변경된 URL로 이동
+            window.location.href = updatedUrl;
+        });
+        // next Btn
+        $("#nextBtn").click(function (){
+            // 버튼의 페이지 값
+            var curPage = $(this).data("value"); // 페이지 값을 정수로 변환
+
+            // URL에서 페이지 값 변경
+            var currentUrl = window.location.href;
+            var updatedUrl = currentUrl.replace(/([&?]page=)[^&]+/, '$1' + (curPage +1));
+
+            // 변경된 URL로 이동
+            window.location.href = updatedUrl;
+        });
+
+
+
+        // 숫자버튼
+        $(".pageBtn").click(function (){
+            // 버튼의 page 의 값
+            var curPage = $(this).data("value");
+
+            // 현재 Url
+            var currentUrl = window.location.href;
+
+            // Url에 page의 값이 존재하는 지 확인
+            if (currentUrl.indexOf('?page=') !== -1 || currentUrl.indexOf('&page=') !== -1) {
+                // page의 값을 다른 값으로 변경
+                var updatedUrl = currentUrl.replace(/([&?]page=)[^&]+/, '$1' + curPage);
+                window.location.href = updatedUrl;
+            } else {
+                // page의 값이 없으면 추가
+                var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
+                var newUrl = currentUrl + separator + 'page=' + curPage;
+                window. location.href = newUrl;
+            }
+        });
+    })
+
+</script>
+<!-- ProductList Section End -->
+<!-- Footer Area Start -->
+<footer th:insert="~{layout/footer :: footer}"></footer>
+<!-- Footer Area End -->
+</body>
+</html>
