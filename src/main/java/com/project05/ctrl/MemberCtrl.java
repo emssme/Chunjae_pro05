@@ -130,7 +130,7 @@ public class MemberCtrl {
     public String joinPro(Member member, Model model) {
         memberService.memberInsert(member);
         model.addAttribute("msg", "가족이 되신걸 환영합니다.");
-        model.addAttribute("url", "/member/login");
+        model.addAttribute("url", "member/login");
         return "/member/alert";
     }
 

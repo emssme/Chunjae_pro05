@@ -33,7 +33,7 @@ public interface MemberMapper {
     @Select("SELECT * FROM member WHERE id=#{id}")
     Member memberGet(String id);
 
-    @Insert("INSERT INTO member VALUES (default, #{id}, #{pw}, #{name}, #{tel}, #{email}, #{addr1}, #{addr2}, #{addr3}, #{postcode}, default, default)")
+    @Insert("INSERT INTO member VALUES (default, #{id}, #{pw}, #{name}, #{tel}, #{email}, #{addr1}, #{addr2}, #{addr3}, #{postcode}, default, default, default)")
     void memberInsert(Member member);
 
     @Update("UPDATE member SET name=#{name}, tel=#{tel}, email=#{email}, addr1=#{addr1}, addr2=#{addr2}, addr3=#{addr3}, postcode=#{postcode} WHERE id=#{id}")

@@ -31,91 +31,72 @@
 </section>
 <!-- End Breadcrumbs -->
 <!-- ProductList Section Start -->
-<section>
-    <input type="hidden" id="proaddrVal" th:value="${proaddr}">
-    <button id="proaddrBtn" onclick="proaddr()"> 내 지역만 보기 </button>
-    <button
-            onclick="status()"> 판매중인 상품 </button>
-    <div class="row mt-5 justify-content-center" >
-        <h2 class="text-center mb-5"> 판매 중인 상품 </h2>
-        <div class="col-lg-3">
-            <div class="">
-                <ul>
-                    <li th:style="${curCategory eq null ? 'border-bottom : 1px solid #333' : ''}">
-                        <a th:href="@{/product/list}" th:text="전체"></a>
+<section id="portfolio" class="portfolio">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 d-flex justify-content-center">
+                <ul id="portfolio-flters">
+                    <li th:class="${curCategory eq null ? 'filter-active' : ''}">
+                        <a th:href="@{/product/list}" th:style="${curCategory eq null ? 'color : #fff; font-weight : bold; font-size: 20px;' : 'font-size: 20px;'}"
+                           style="font-size: 20px">All</a>
                     </li>
-                    <li th:each="cate : ${categories}">
-                        <button class="cateBtn" onclick="cate()" th:value="${cate.cate}" th:text="${cate.cateName}" th:style="${cate.cate eq curCategory ? 'background-color : pink' : ''}"></button>
-                    </li>
+
+                    <th:block th:each="cate : ${categories}">
+                        <li th:class="${curCategory eq cate.cate ? 'filter-active' : ''}">
+                            <a th:href="@{/product/list(cate=${cate.cate})}" th:value="${cate.cate}" th:text="${cate.cateName}"
+                               th:style="${curCategory eq cate.cate ? 'color : #fff; font-weight : bold; font-size: 20px;' : 'font-size: 20px;'}" style="font-size: 20px"></a>
+                        </li>
+                    </th:block>
                 </ul>
             </div>
-            <div class="justify-content-center">
-                <div class="btn-group">
-                    <a th:href="@{/product/insert}" class="btn btn-primary">상품 등록</a>
-                </div>
-                <form th:action="@{/product/list}" method="get">
-                    <select id="type" name="type" class="select" style="height:unset;">
-                        <option value="P" id="P">상품명</option>
-                        <option value="C" id="C">내용</option>
-                        <option value="S" id="S">판매자</option>
-                    </select>
-                    <input type="text" id="keyword" name="keyword" placeholder="검색" th:value="${keyword}">
-                    <button type="submit"><i class="bi bi-search"></i></button>
-                </form>
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>카테고리</th>
-                        <th>지역</th>
-                        <th>상태</th>
-                        <th>상품명</th>
-                        <th>가격</th>
-                        <th>판매자</th>
-                        <th>등록일</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="list : ${productList}">
-                        <td th:text="${list.pno}"></td>
-                        <td th:text="${list.cateName}"></td>
-                        <td th:text="${list.proaddr}"></td>
-                        <td>
-                            <span th:if="${list.status eq 'SALE'}">판매 중</span>
-                            <span th:if="${list.status eq 'RESERVED'}">예약 중</span>
-                            <span th:if="${list.status eq 'OUT'}">판매 완료</span>
-                        </td>
-                        <td><a th:href="@{/product/detail(pno=${list.pno})}" th:text="${list.pname}"></a></td>
-                        <td th:text="${list.price}"></td>
-                        <td th:text="${list.seller}"></td>
-                        <td th:text="${list.createAt}"></td>
-                    </tr>
-                    <tr th:if="${productList.isEmpty()}">
-                        <td colspan="5"> 등록된 상품이 없습니다.</td>
-                    </tr>
-                    </tbody>
-                </table>
-                <!-- Pagination -->
-                <div class="row" th:if="${page.lastPageNum != 0}">
-                    <div class="col-lg-12">
-                        <ul class="pagination">
-                            <li th:if="${curPage > 1}">
-                                <span id="prevBtn" th:data-value="${curPage}"> << </span>
-                            </li>
-                            <li th:each="i : ${#numbers.sequence(page.blockStartNum, page.blockLastNum)}">
-                                <span th:data-value="${i}" th:if="${page.curPageNum == i}" th:text="${i}" class="is_active pageBtn"></span>
-                                <span class="pageBtn" th:data-value="${i}" th:if="${page.curPageNum != i}"  th:text="${i}"></span>
-                            </li>
-                            <li th:if="${page.blockLastNum < page.totalPageCount}">
-                                <span id="nextBtn" th:data-value="${curPage}"> >> </span>
-                            </li>
-                        </ul>
+        </div>
+        <div class="row portfolio-container">
+            <div class="col-lg-4 col-md-6" th:each="list : ${productList}">
+                <!-- product card -->
+                <div class="product-item bg-light">
+                    <div class="card">
+                        <div class="thumb-content">
+                            <div class="price" th:if="${list.price eq 0}" th:text="나눔"></div>
+                            <div class="price" th:if="${list.price ne 0}">[[${list.price}]] 원</div>
+                            <a th:href="@{/product/detail(pno=${list.pno})}">
+                                <th:block th:if="${!list.fileDataList.isEmpty()}">
+                                    <img class="card-img-top img-fluid" style="width: 255px; height: 255px;" th:src="@{/images/} + ${list.fileDataList[0].saveName}">
+                                    <!--                                                <img class="card-img-top img-fluid" style="width: 255px; height: 255px;" th:src="@{/images/} + ${list.fileDataList[0].savePath}+'/'+${list.fileDataList[0].saveName}">-->
+                                </th:block>
+                                <th:block th:if="${list.fileDataList.isEmpty()}">
+                                    <img class="card-img-top img-fluid" style="width: 255px; height: 255px;" th:src="@{/images/no_image.png}">
+                                </th:block>
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title"><a th:href="@{/product/detail(pno=${list.pno})}" th:text="${list.pname}"></a></h4>
+                            <ul class="list-inline product-meta">
+                                <li class="list-inline-item">
+                                    <p><i class="fa fa-folder-open-o mr-1" aria-hidden="true"></i>[[${list.cateName}]]</p>
+                                </li>
+                                <li class="list-inline-item">
+                                    <p><i class="fa fa-calendar mr-1" aria-hidden="true"></i>[[${#dates.format(list.createAt, 'yyyy-MM-dd')}]]</p>
+                                </li>
+                                <li class="list-inline-item" th:if="${!list.proaddr.isEmpty()}">
+                                    <p><i class="fa fa-location-arrow mr-1" aria-hidden="true" ></i>[[${list.proaddr}]]</p>
+                                </li>
+                                <li class="list-inline-item">
+                                    <p><i class="fa fa-user mr-1" aria-hidden="true"></i>[[${list.seller}]]</p>
+                                </li>
+                                <li class="list-inline-item">
+                                    <p th:if="${list.status eq 'SALE'}"><i class="fa fa-bookmark mr-1" aria-hidden="true"></i>판매 중</p>
+                                    <p th:if="${list.status eq 'RESERVED'}" style="color: #5672f9"><i class="fa fa-bookmark mr-1" aria-hidden="true"></i>예약 중</p>
+                                    <p th:if="${list.status eq 'OUT'}" style="color: #ff3333"><i class="fa fa-bookmark mr-1" aria-hidden="true"></i>판매 완료</p>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</section><!-- End Portfolio Section -->
+
 <script>
     $(document).ready(function (){
         // 내 주소만 보기 버튼
@@ -181,77 +162,6 @@
 
             // 새 URL로 이동
             window.location.href = updatedUrl;
-        });
-
-        // 카테고리
-        $(document).ready(function (){
-            $(".cateBtn").click(function (){
-                // 버튼의 cate 의 값
-                var newCateValue = $(this).val();
-
-                // 현재 Url
-                var currentUrl = window.location.href;
-
-                // Url에 cate의 값이 존재하는 지 확인
-                if (currentUrl.indexOf('?cate=') !== -1 || currentUrl.indexOf('&cate=') !== -1) {
-                    // cate의 값을 다른 값으로 변경
-                    var updatedUrl = currentUrl.replace(/([&?]cate=)[^&]+/, '$1' + newCateValue);
-                    window.location.href = updatedUrl;
-                } else {
-                    // cate의 값이 없으면 추가
-                    var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
-                    var newUrl = currentUrl + separator + 'cate=' + newCateValue;
-                    window.location.href = newUrl;
-                }
-            });
-        });
-        // 페이징
-        // prev Btn
-        $("#prevBtn").click(function (){
-            // 버튼의 페이지 값
-            var curPage = $(this).data("value"); // 페이지 값을 정수로 변환
-
-            // URL에서 페이지 값 변경
-            var currentUrl = window.location.href;
-            var updatedUrl = currentUrl.replace(/([&?]page=)[^&]+/, '$1' + (curPage -1));
-
-            // 변경된 URL로 이동
-            window.location.href = updatedUrl;
-        });
-        // next Btn
-        $("#nextBtn").click(function (){
-            // 버튼의 페이지 값
-            var curPage = $(this).data("value"); // 페이지 값을 정수로 변환
-
-            // URL에서 페이지 값 변경
-            var currentUrl = window.location.href;
-            var updatedUrl = currentUrl.replace(/([&?]page=)[^&]+/, '$1' + (curPage +1));
-
-            // 변경된 URL로 이동
-            window.location.href = updatedUrl;
-        });
-
-
-
-        // 숫자버튼
-        $(".pageBtn").click(function (){
-            // 버튼의 page 의 값
-            var curPage = $(this).data("value");
-
-            // 현재 Url
-            var currentUrl = window.location.href;
-
-            // Url에 page의 값이 존재하는 지 확인
-            if (currentUrl.indexOf('?page=') !== -1 || currentUrl.indexOf('&page=') !== -1) {
-                // page의 값을 다른 값으로 변경
-                var updatedUrl = currentUrl.replace(/([&?]page=)[^&]+/, '$1' + curPage);
-                window.location.href = updatedUrl;
-            } else {
-                // page의 값이 없으면 추가
-                var separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
-                var newUrl = currentUrl + separator + 'page=' + curPage;
-                window. location.href = newUrl;
-            }
         });
     })
 

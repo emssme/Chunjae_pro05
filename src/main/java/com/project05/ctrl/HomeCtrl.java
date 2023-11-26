@@ -17,9 +17,9 @@ public class HomeCtrl {
 
     @RequestMapping("/")
     public String home(Model model) {
-        List<ProductVO> popularProducts = productService.popularProducts();
-
-        model.addAttribute("popularProducts", popularProducts);
+//        List<ProductVO> popularProducts = productService.popularProducts();
+//
+//        model.addAttribute("popularProducts", popularProducts);
         return "/index";
     }
 
